@@ -18,7 +18,7 @@ Skills are structured instruction sets (`SKILL.md` files) that turn Claude into 
 | `creation-guard` | Use when you need a pre-flight duplicate check before creating new skills or agents |
 | `devils-advocate` | Use when you need to challenge research assumptions or stress-test arguments |
 | `handoff` | Use when you need to pass state to the next session in the current working directory. Writes a handoff.md file that the next session's SessionStart hook will read and delete |
-| `init-paper-book` | Use when you need to scaffold a NEW educational companion book for a LaTeX paper. Reads the paper, drafts 8 substantive chapters into the vault at ~/Research-Vault/books/<slug>/, copies bib + figures, registers the book, and verifies atlas serves it. Source-of-truth is the paper PDF/tex; the book is a reading companion, never a re-statement of new claims. For syncing an existing book to a paper revision, use /audit-paper-book |
+| `init-paper-book` | Use when you need to scaffold a NEW educational companion book for a LaTeX paper. Reads the paper, drafts 8 substantive chapters into the vault at ~/Research-Vault/books/{slug}/, copies bib + figures, registers the book, and verifies atlas serves it. Source-of-truth is the paper PDF/tex; the book is a reading companion, never a re-statement of new claims. For syncing an existing book to a paper revision, use /audit-paper-book |
 | `init-project` | Bootstrap a new research project. Interview for details, scaffold directory structure, create Overleaf symlink, initialise git, and create project context files |
 | `init-project-course` | Use when you need to bootstrap a university course or module folder |
 | `init-project-light` | Use when you need to bootstrap a lightweight project with minimal structure |

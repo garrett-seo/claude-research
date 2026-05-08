@@ -9,6 +9,8 @@ argument-hint: "[topic-query] or <topic-slug> for full pipeline"
 
 Comprehensive academic literature workflow: discover, verify, organise, synthesise. Uses parallel sub-agents to search multiple sources, verify citations, and fetch PDFs concurrently.
 
+> **Web alternative**: a lighter-weight version of this workflow runs at [literature.user.com](https://literature.user.com) (`packages/literature-workspace/`) — keyword/file-upload search across biblio-sources + RefPile, with Sonnet-driven synthesis. Useful for collaborators (CF Access auth) or quick discovery sessions where you don't need vault sync, DOI hard-gating, or pipeline mode. Use the CLI skill when you need verified citations entering a `.bib` file or full Phase 5 synthesis with negative-evidence + cross-cluster analysis.
+
 ## Hard Rules
 
 ### Existential — block submission
