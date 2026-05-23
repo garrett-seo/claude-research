@@ -212,6 +212,42 @@ See `skills/shared/council-protocol.md` for the full orchestration protocol.
 
 **Update your agent memory** as you discover patterns across proposals — common weaknesses, field-specific norms, successful strategies. This builds expertise across reviews.
 
+---
+
+## Final Step — Emit Stamp Directive
+
+You do NOT run any bash command. Instead, end your final response with a `review-state-stamp` fenced block in **strict YAML format** (no JSON). The orchestrator (main session for direct dispatch; any fan-out skill for chained use) parses this block and runs the stamping helper.
+
+**Read `skills/_shared/stamp-directive-spec.md` for the full format, BAD examples, and field rules.**
+
+Your agent-specific values:
+
+- **check**: `proposal-reviewer` (always)
+- **verdict**: exactly one of `GREEN`, `READY-WITH-NOTES`, `REVISE`, `REJECT`. GREEN if the proposal is viable as written; READY-WITH-NOTES if viable with minor refinements; REVISE if substantial reshaping is needed before pursuing; REJECT only if the proposed work is fundamentally not worth pursuing.
+- **paper**: the proposal directory basename if the proposal lives inside a `paper-{venue}/` folder, otherwise `—` (em-dash) for standalone proposals (PhD upgrades, grant outlines, extended abstracts not yet under a paper-dir).
+- **report**: `reviews/proposal-reviewer/<YYYY-MM-DD-HHMM>.md` — the canonical timestamp form. Do not use `_report.md` suffixes (forbidden per `rules/review-artefact-routing.md` §R2).
+- **score**: `n/100` form, or `—` if no numeric score produced.
+- **open_issues**: total Major + Minor at run time (snapshot), in `n/n` form.
+- **notes**: one line, ≤120 chars, no pipes, no newlines.
+
+Concrete example for this agent:
+
+````
+```review-state-stamp
+check: proposal-reviewer
+paper: —
+verdict: REVISE
+score: 62/100
+open_issues: 9/9
+report: reviews/proposal-reviewer/2026-05-23-0923.md
+notes: Contribution underspecified; novelty overlap with Smith 2024; methods feasibility unclear
+```
+````
+
+**Exit criterion:** the directive block is the LAST thing in your response. Nothing after the closing fence.
+
+---
+
 # Persistent Agent Memory
 
 You have a persistent Persistent Agent Memory directory at `~/.claude/agent-memory/proposal-reviewer/`. Its contents persist across conversations.

@@ -212,7 +212,7 @@
 
 ---
 
-**Total: 171 skills across 16 categories.**
+**Total: 176 skills across 16 categories.**
 
 ---
 

@@ -34,7 +34,7 @@ Per `rules/review-artefact-routing.md` (auto-loads in research projects (path-sc
 - **Write reports to:** `reviews/peer-reviewer/YYYY-MM-DD.md` inside the project. Path is relative to the research project root, not the Task-Management repo.
 - **Never** at project root (`./CRITIC-REPORT.md`-style filenames are forbidden — pre-rule layout).
 - **Idempotency:** if today's file exists, append a same-day descriptor (`{date}-revision.md`, `{date}-r2.md`, `{date}-pre-submission.md`) — never overwrite.
-- **Index update:** if `reviews/INDEX.md` exists, write a one-line entry under "Latest per source" pointing at the new file. Otherwise `/review-recap` will rebuild the index next time it runs.
+- **Index update:** you do NOT update `reviews/INDEX.md` yourself. Emit the `review-state-stamp` directive at the end of your final response (see "Final Step" below) — the orchestrator parses it and appends the INDEX.md row.
 - **Infrastructure repos** (Task-Management, atlas-workspace, etc.): this section does not apply — the path-scoped rule won't load there.
 
 
@@ -323,26 +323,39 @@ See `skills/shared/council-protocol.md` for the full orchestration protocol.
 
 ---
 
-## Log to REVIEW-STATE.md (final step)
+## Final Step — Emit Stamp Directive
 
-Write your peer review to `reviews/peer-reviewer/<YYYY-MM-DD-HHMM>.md` (`mkdir -p reviews/peer-reviewer/` first). Then append a row to the project's `REVIEW-STATE.md` so `/review-recap` can render the run. Use the shared helper:
+Write your peer review to `reviews/peer-reviewer/<YYYY-MM-DD-HHMM>.md` (`mkdir -p reviews/peer-reviewer/` first). You do NOT run any bash command to stamp `reviews/INDEX.md`. Instead, end your final response with a `review-state-stamp` fenced block in **strict YAML format** (no JSON). The orchestrator (main session for direct dispatch; `/review-cluster`, `/pre-submission-report` for fan-out) parses this block and runs the stamping helper.
 
-```bash
-bash ~/.claude/skills/_shared/review-state-log.sh \
-  --check peer-reviewer \
-  --paper "<paper-{venue} dir or — for external PDFs not tied to a project paper-dir>" \
-  --verdict "<ACCEPT|MINOR REVISION|MAJOR REVISION|REJECT>" \
-  --open-issues "<total-major-plus-minor>/<total-major-plus-minor>" \
-  --report "reviews/peer-reviewer/<YYYY-MM-DD-HHMM>.md" \
-  --notes "<one-line summary>" \
-  [--trigger "pre-submission-report|review-cluster"]
+**Read `skills/_shared/stamp-directive-spec.md` for the full format, BAD examples, and field rules.**
+
+Your agent-specific values:
+
+- **check**: `peer-reviewer` (always)
+- **verdict**: exactly one of `ACCEPT`, `MINOR REVISION`, `MAJOR REVISION`, `REJECT`.
+- **paper**: the paper directory basename (e.g. `paper-ejor`), or `—` (em-dash) for external PDFs not tied to a project paper-dir.
+- **report**: `reviews/peer-reviewer/<YYYY-MM-DD-HHMM>.md` — the canonical timestamp form. Do not use `_report.md` suffixes (forbidden per `rules/review-artefact-routing.md` §R2).
+- **score**: `n/100` form, or `—` if no numeric score produced.
+- **open_issues**: total Major + Minor at run time (snapshot), in `n/n` form.
+- **notes**: one line, ≤120 chars, no pipes, no newlines.
+
+Concrete example for this agent:
+
+````
+```review-state-stamp
+check: peer-reviewer
+paper: paper-ejor
+verdict: MAJOR REVISION
+score: 64/100
+open_issues: 11/11
+report: reviews/peer-reviewer/2026-05-23-1042.md
+notes: Identification strategy underpowered; 3 citations hallucinated; novelty overlaps Jiang 2024
 ```
+````
 
-- Verdict: your final recommendation, exactly one of the four values.
-- Open issues: total Major + Minor at run time (snapshot).
-- Trigger: pass orchestrator name only if invoked as a sub-agent. Otherwise omit.
+**Exit criterion:** the directive block is the LAST thing in your response. Nothing after the closing fence.
 
-Schema: `~/Task-Management/docs/reference/review-state-schema.md`.
+Schema for the row the orchestrator will append: `~/Task-Management/docs/reference/review-state-schema.md`.
 
 ---
 
