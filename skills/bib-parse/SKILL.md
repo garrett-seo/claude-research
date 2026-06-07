@@ -7,7 +7,7 @@ argument-hint: <path-to-pdf>
 
 # Bibliography Parser — PDF to .bib
 
-**LIBRARY-FIRST RULE: ALWAYS check Paperpile (`paperpile search-library`) for each parsed reference BEFORE generating new BibTeX entries.** Reuse existing library entries instead of constructing from scratch. Enforced in Phase 2.3.
+**LIBRARY-FIRST RULE: ALWAYS check Paperpile membership by DOI (`paperpile lookup-by-doi`) for each parsed reference BEFORE generating new BibTeX entries.** Topic/title `search-library` is a lossy discovery aid, NOT a membership test — never tag a reference `NEW` off a title-search miss. Reuse existing library entries instead of constructing from scratch. Enforced in Phase 2.3 per [`shared/reference-resolution.md`](../shared/reference-resolution.md) § Membership Check.
 
 **Goal:** given a PDF file, extract all cited references and produce a clean, validated `.bib` file.
 
@@ -106,9 +106,9 @@ For each extracted reference, verify and enrich using available tools:
 
 For each parsed reference, check if it already exists in Paperpile using the resolution order from [`shared/reference-resolution.md`](../shared/reference-resolution.md):
 
-1. Call `paperpile search-library` with the paper title.
-2. If DOI is available, also try `paperpile lookup-by-doi` for exact matching.
-3. If a match is found (title + first author match): mark as **ALREADY IN PAPERPILE**, use the Paperpile citation key instead of generating a new one, skip staging in Phase 4.1.
+1. **Check membership by DOI** — `paperpile lookup-by-doi --doi <DOI>` for each parsed reference (verify the DOI itself first if unsure). This is the membership test. Batch ≥6 references via one Bash sub-agent returning a merged `{doi: citekey-or-null}` map.
+2. **Only for DOI-less references**, fall back to `paperpile search-library` with first-author surname + title keywords (limit ≥10) — a discovery aid, not a membership test.
+3. **Match → ALREADY IN PAPERPILE**: reuse the returned Paperpile citekey, skip staging in Phase 4.1. **A confirmed DOI miss (or, for DOI-less refs, an author+title miss) → `NEW`** — never tag `NEW` off a `search-library` miss alone. Foundational classics (Simon, March, Levinthal, Cyert & March, …) are the most common false `NEW`; check them by DOI too.
 
 **Status summary:**
 

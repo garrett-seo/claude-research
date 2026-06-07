@@ -103,6 +103,7 @@ Phase 2: Accessibility     (acronyms, equation-prose pairing, jargon density)
 Phase 3: Classify          (mechanical / numeric / structural / accessibility / new-content)
 Phase 4: Apply or report   (--apply: mechanical fixes; otherwise report-only)
 Phase 5: Verify            (atlas reload + chapter smoke test if --apply ran)
+Phase 6: Rebuild PDF       (mystmd → patched xelatex; soft-fail, --apply only)
 ```
 
 ### Phase 1: Diff inventory
@@ -164,6 +165,10 @@ See [`references/phase-4-apply-logic.md`](references/phase-4-apply-logic.md) for
 ### Phase 5: Verify (if --apply ran OR --visual-check passed in)
 
 See [`references/phase-5-verify-smoke-tests.md`](references/phase-5-verify-smoke-tests.md) for HTTP smoke-test and mandatory Playwright visual verification logic.
+
+### Phase 6: Rebuild PDF companion (soft-fail; --apply only)
+
+See [`references/phase-6-pdf-rebuild.md`](references/phase-6-pdf-rebuild.md). Runs `bash ~/.claude/skills/init-paper-book/scripts/build-book-pdf.sh <slug>` if `--apply` was passed and Phase 4 actually changed chapter files. Skips silently if `mystmd` is not on PATH or `myst.yml` is missing (no audit-time file creation beyond the build pipeline's own bootstrap). Warns on build error.
 
 ## Report format
 

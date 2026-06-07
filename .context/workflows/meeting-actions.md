@@ -82,7 +82,7 @@ tags: [meeting-action]
 
 ### Supervisor Action Items
 - Flag these as higher priority by default
-- Tag with the relevant university (relevant institution)
+- Tag with the relevant university ([University])
 
 ### Research-Related Actions
 - Link to the relevant paper project

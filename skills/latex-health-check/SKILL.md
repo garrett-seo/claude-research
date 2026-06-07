@@ -72,7 +72,8 @@ cd <project-dir> && latexmk -interaction=nonstopmode <main.tex> 2>&1
 ### 2c. Parse log
 Extract from `out/*.log`:
 - Error count (lines starting with `!`)
-- Warning count (Overfull/Underfull hbox/vbox)
+- LaTeX/package warning count (`Warning`-tagged lines)
+- Overfull/underfull box count — use the detection recipes in [`../shared/overfull-boxes.md`](../shared/overfull-boxes.md), NOT a `Warning` grep (box lines carry no `Warning` token)
 - Undefined citation count
 - Missing package count
 
@@ -84,7 +85,7 @@ For each error, apply the known fix from the database:
 |--------------|-----|
 | Missing package `X` | Add `\usepackage{X}` — but NEVER try `xltabular` or `ltablex` (use `longtable` instead) |
 | Undefined citation `key` | Check .bib file exists and is referenced; check for typos via edit distance |
-| Overfull hbox | Flag location and width — do NOT auto-fix (requires human judgment) |
+| Overfull/underfull box | Flag location + width per [`../shared/overfull-boxes.md`](../shared/overfull-boxes.md) — do NOT auto-fix prose (only safe auto-fix is adding `microtype` when absent) |
 | tcolorbox `=` or `,` in title | Wrap title in braces: `title={...}` |
 | Font encoding warning | Add `\usepackage[T1]{fontenc}` if missing |
 | Missing `\begin{document}` | Check for corrupted preamble |

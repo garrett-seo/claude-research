@@ -174,7 +174,7 @@ Populate the Publication Strategy section of `review-analysis.md`:
 6. **Compile the LaTeX.** `reviewer-comments-verbatim.tex` must build cleanly before Phase 5.
 7. **Phase 8 is a hard gate.** Cycles block Phase 9. Fix the DAG, re-run validation.
 8. **Phase 11 is mandatory.** Do not skip computational optimization — parallel batches and critical path override manual sequencing where they conflict.
-9. **Don't write response letters.** The skill produces plans and trackers; writing the rebuttal is the user's job.
+9. **Don't write response letters.** The skill produces plans and trackers; writing the rebuttal is the user's job. To inventory *what actually changed* between the submitted and revised manuscript as raw material for the rebuttal, run `/latex-diff` (submitted revision vs working tree) — it reports the change list; it does not write the letter.
 10. **GO/NO-GO gate after Block A.** If empirical foundation changes key conclusions, escalate to authors before advancing.
 
 ## Templates
@@ -186,6 +186,7 @@ Located in `templates/referee-comments/`:
 
 ## Cross-References
 
+- `/latex-diff` — diff the submitted vs revised manuscript (git revision or backup vs working tree) to build the "summary of changes" and confirm every committed revision has a rebuttal line. Read-only; raw material for the letter, not the letter itself.
 - `/proofread` — proofread the response letter before submission
 - `/bib-validate` — run after revision to check bibliography
 - `/pre-submission-report` — full quality check before resubmission

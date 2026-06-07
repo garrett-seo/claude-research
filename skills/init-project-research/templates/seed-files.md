@@ -115,8 +115,10 @@ paper/
 # Logs
 log/
 
-# Unsorted inbox
-to-sort/
+# Unsorted inbox — ignore contents, keep the folder tracked via .gitkeep so the
+# inbox persists across clones and never vanishes when emptied during triage.
+to-sort/*
+!to-sort/.gitkeep
 
 # Machine-specific memory (gitignored, never synced)
 .claude/state/
@@ -149,7 +151,9 @@ build/
 *.toc
 out/
 
-# Daily Overleaf snapshots (per `review-artefact-routing` rule + per-paper backup hook)
+# Overleaf backup snapshots (per review-artefact-routing rule).
+# Each paper-{venue}/backup/ is a folder of Overleaf-produced snapshots
+# that change on every sync and should not pollute git history.
 paper-*/backup/
 
 # Archived review reports (per `review-artefact-routing` rule)

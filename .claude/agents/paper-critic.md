@@ -357,6 +357,7 @@ If a previous report exists in `reviews/paper-critic/`, read the most recent one
 - New findings in Round 2+ are only legitimate if: (a) introduced by the author's revisions, (b) factual errors genuinely missed in Round 1, or (c) revealed by new content
 - State explicitly at the top: "This revision addresses N of M original issues. Remaining: [list]."
 - **Do not move the goalposts** — if the Round 1 report asked for X and the author delivered X, that issue is resolved. Period.
+- **Focus the re-read with `/latex-diff`.** If a prior version is in git or a `backup/` snapshot exists, run `latexdiff-agent <prior-rev> <current> --semantic-only --compact` (or ask the orchestrator to supply that JSON if Bash is unavailable) to get the exact set of changed regions. Use it to (a) confirm each STILL-OPEN issue's locus was actually touched, and (b) bound new findings to content the author changed. It focuses the re-read — it does not replace reading the revised paper.
 
 ---
 

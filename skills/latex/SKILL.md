@@ -136,7 +136,8 @@ After the loop ends (either clean compilation or max iterations reached), report
 | **Status** | Clean / Errors remaining |
 | **Iterations** | N of 5 |
 | **Pages** | (from log: `Output written on ... (N pages)`) |
-| **Warnings** | Count of remaining warnings (overfull/underfull hbox, etc.) |
+| **LaTeX/package warnings** | Count of `Warning`-tagged log lines (undefined refs, font subs, package warnings) |
+| **Typographic boxes** | Overfull/underfull h/vboxes by severity — see box report below (NOT counted by a `Warning` grep) |
 | **Fixes applied** | List each fix: what error, what was changed, which file |
 | **Unresolved errors** | List any errors that couldn't be auto-fixed |
 
@@ -146,11 +147,36 @@ After the loop ends (either clean compilation or max iterations reached), report
 grep -o "Output written on .* ([0-9]* page" out/<filename>.log | grep -o "[0-9]* page"
 ```
 
-#### How to count warnings
+#### How to count warnings and boxes
+
+Warnings and typographic boxes are **separate** — box messages are not
+`Warning`-tagged, so a single `Warning` grep misses every overfull/underfull box.
+Report both, using the recipes in [`../shared/overfull-boxes.md`](../shared/overfull-boxes.md):
 
 ```bash
+# LaTeX/package warnings (refs, fonts, packages)
 grep -c "Warning" out/<filename>.log
+# Overfull/underfull boxes (the thing the Warning grep cannot see)
+grep -cE 'Overfull \\[hv]box \([0-9.]+pt too (wide|high)\)' out/<filename>.log
+grep -cE 'Underfull \\[hv]box \(badness [0-9]+\)' out/<filename>.log
 ```
+
+#### Box report (typographic quality)
+
+Extract the top offenders by overflow magnitude and report each box `≥ 1 pt` with
+its location, width, and a remediation tier per the severity gradient + ladder in
+[`../shared/overfull-boxes.md`](../shared/overfull-boxes.md):
+
+```bash
+awk -F'[()]' '/Overfull \\[hv]box/ {
+    split($2, a, "pt"); w = a[1] + 0;
+    loc = $0; sub(/.*too (wide|high)\) */, "", loc);
+    printf "%7.1f pt  %s\n", w, loc
+}' out/<filename>.log | sort -rn | head -20
+```
+
+Report only — do not silently reword prose to close a box (`rules/manuscript-edit-budget.md`).
+The only safe auto-fix is inserting `\usepackage{microtype}` when genuinely absent.
 
 **Breadcrumb:** Append to `.planning/state.md` (if exists) or `.context/current-focus.md`:
 ```
@@ -186,7 +212,7 @@ grep -c "Warning" out/<filename>.log
 After all phases complete, compute the quality score:
 
 1. Read [`references/quality-rubric.md`](references/quality-rubric.md) for deduction mappings.
-2. Log every issue from Phases 2-4 (unresolved errors, remaining warnings, citation mismatches).
+2. Log every issue from Phases 2-4 (unresolved errors, remaining warnings, overfull/underfull boxes from the Phase 3 box report, citation mismatches). The rubric deducts per box by severity (`>10pt: -5`, `1-10pt: -2`, underfull: `-1`) — feed it the box report, not a `Warning` count.
 3. Compute score (100 - total deductions), apply verdict per [`../shared/quality-scoring.md`](../shared/quality-scoring.md).
 4. Append the Score Block to the compilation report:
 

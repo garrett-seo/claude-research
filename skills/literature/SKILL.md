@@ -82,7 +82,8 @@ Per the global `--autonomous` / `-y` convention defined in `~/.claude/rules/phas
 - **Single end-of-run report** is the only mandatory user-facing output
 
 Hard correctness gates that still fire even with `--autonomous`:
-- DOI verification (Phase 3) with title-match — fabricated DOIs are F1/blocker
+- DOI verification (Phase 3 Step 1/4) with title-match — fabricated DOIs are F1/blocker
+- **Paperpile membership resolution (Phase 3 Step 5) — `lookup-by-doi` on every verified DOI; never tag `NEW` off a topic-search miss**
 - Sprint-contract D1–D5 self-check (Phase 4.3 hook)
 - Phase 4.6 outputs-manifest verifier (manifests must verify or commit is blocked)
 - The forbid-list for sub-agents (still applied)
@@ -134,7 +135,7 @@ Find existing `.bib` files in project root, `/references`, `/bib`, `/bibliograph
 1. Parse existing entries to avoid duplicates and understand context.
 2. Identify gaps — note if the bibliography skews toward certain years/methods.
 3. Compile the list of existing citation keys to pass to sub-agents.
-4. **Mandatory: check Paperpile.** Call `paperpile search-library` for the topic. Also call `paperpile get-items-by-label` if a relevant label exists. Mark hits as **ALREADY IN PAPERPILE** and reuse their citation keys. If `paperpile` CLI is unavailable, log a warning and continue.
+4. **Mandatory: check Paperpile.** Call `paperpile search-library` for the topic (and `paperpile get-items-by-label` if a relevant label exists) to *discover* what the library already holds and reuse those citation keys. This is topic discovery, **not** a membership test. **Membership/`NEW` tagging is decided authoritatively by DOI** (`paperpile lookup-by-doi`) in **Phase 3 Step 5** (the integrity gate), per [`shared/reference-resolution.md`](../shared/reference-resolution.md) § Membership Check — never default a paper to `NEW` because this topic search missed it. A topic-search hit here is a reuse *hint*; a topic-search miss proves nothing. If `paperpile` CLI is unavailable, log a warning and continue.
 5. **Resolve topic label** via `paperpile get-labels` for the current topic. Used in Phase 4 sync reporting.
 6. **Check source availability** via `scholarly source-status --json` (OpenAlex always; Scopus/WoS if API keys are set). Report so search agents know coverage.
 7. **Check scout-audit reports.** Glob `~/Research-Vault/reports/scout/portfolio/*<topic-slug>*.md` and `*<topic-keyword>*.md`. If a recent (≤90 days) report exists, parse the **Closest prior works** and **Most likely scoopers** sections — feed authors/papers/groups directly to Phase 2 search agents as seeds. This avoids re-discovering what scout already surfaced.
@@ -191,24 +192,25 @@ If SciSciNet enrichment fires, run it on the ranked pool: adds `disruption_score
 
 This phase IS the integrity gate per [`shared/integrity-gates.md`](../shared/integrity-gates.md). No reference may enter the `.bib` without passing here.
 
-Six-step protocol:
+Seven-step protocol:
 
 1. **Batch DOI pre-verification** via `scholarly scholarly-verify-dois --json` — title-match check is mandatory (off-by-one DOI suffix hallucinations are the dominant failure mode). One CLI call accepts up to 50 DOIs; if you have more, see Dispatch Rule below before splitting.
 2. **Find correct DOIs** for flagged papers via Crossref API → `scholarly-search` → web search (in order of reliability).
 3. **Manual verification** of remaining papers — spawn general-purpose agents in parallel, ~5 papers each. Template: [`references/agent-templates.md#phase-4-verification-agent-template`](references/agent-templates.md#phase-4-verification-agent-template).
 4. **Final DOI gate** — re-run `scholarly-verify-dois` on all DOIs entering the `.bib`. Papers without DOIs get `% NO DOI`. Subject to the same Dispatch Rule.
-5. **Confidence grades** — A (DOI + full metadata), B (stable identifier, no DOI), C (single non-canonical source).
-6. **Working paper inclusion test** — include only if ≥2 of: high citations, established author, top venue, sole source for concept, verifiable forthcoming status.
+5. **Paperpile membership resolution (HARD — do not skip, do not infer from the Phase 1 topic search).** For **every** verified DOI, run `paperpile lookup-by-doi --doi <DOI> --json` to decide held-vs-`NEW`. This is the *only* authoritative membership test — `paperpile search-library` (Phase 1.2 step 4) is lossy topic discovery and a search miss is **not** evidence of absence. **Batch ≥6 DOIs via a single Bash sub-agent** that loops the lookups and returns a merged `{doi: citekey-or-null}` map (per the Dispatch Rule below). For each match, reuse the returned Paperpile citekey and pull the canonical entry with `paperpile export-bib --citekeys <key> --json`; for each non-match, tag genuinely `NEW` and stage for import. Mark every assembled entry `% IN PAPERPILE (<key>)` or `% NEW`, and report the held/NEW split count. Full protocol: [`shared/reference-resolution.md`](../shared/reference-resolution.md) § Membership Check. **Failure mode this closes:** defaulting a held paper to `NEW` because the Phase 1 topic search missed it (incident 2026-06-03 — 6 held papers mislabelled `NEW`, caught only by the user; reused keys were diluted and NEW-staging over-counted).
+6. **Confidence grades** — A (DOI + full metadata), B (stable identifier, no DOI), C (single non-canonical source).
+7. **Working paper inclusion test** — include only if ≥2 of: high citations, established author, top venue, sole source for concept, verifiable forthcoming status.
 
 Full protocol: [`references/phase-4-verification.md`](references/phase-4-verification.md).
 
-#### Dispatch Rule (Steps 1 & 4)
+#### Dispatch Rule (Steps 1, 4 & 5)
 
-Per [`_shared/cli-dispatch-policy.md`](../_shared/cli-dispatch-policy.md): if Step 1 or Step 4 would require **2 or more** `scholarly-verify-dois` calls (i.e. >50 DOIs total), dispatch a single Bash sub-agent that runs all batched calls and writes merged JSON to `/tmp/lit-verify.json`. Main context reads only the merged result, never the raw CLI output. For the bulk-threshold rationale, see `~/.claude/rules/subagent-prompt-discipline.md` § Bulk-Operation Dispatch Rule.
+Per [`_shared/cli-dispatch-policy.md`](../_shared/cli-dispatch-policy.md): if Step 1 or Step 4 would require **2 or more** `scholarly-verify-dois` calls (i.e. >50 DOIs total), dispatch a single Bash sub-agent that runs all batched calls and writes merged JSON to `/tmp/lit-verify.json`. Main context reads only the merged result, never the raw CLI output. **Step 5 membership lookups follow the same rule:** ≥6 `paperpile lookup-by-doi` calls dispatch to one Bash sub-agent returning a merged `{doi: citekey-or-null}` map to `/tmp/lit-membership.json`. For the bulk-threshold rationale, see `~/.claude/rules/subagent-prompt-discipline.md` § Bulk-Operation Dispatch Rule.
 
 ### 3.5 Iterative deep loop (deep mode only)
 
-Prerequisites: ≥5 verified papers. Each iteration: (1) gap analysis with era-gated checks for terminology/paradigm shifts, (2) targeted search via `scholarly` + Explore sub-agents, (3) merge + dedup, (4) verify new papers via the six-step protocol above. Convergence: 3 iterations OR <3 genuinely new papers per iteration OR user says "enough". Full protocol: [`references/deep-loop-protocol.md`](references/deep-loop-protocol.md). Agent prompts: [`references/agent-templates.md#phase-45-deep-loop-agent-templates`](references/agent-templates.md#phase-45-deep-loop-agent-templates).
+Prerequisites: ≥5 verified papers. Each iteration: (1) gap analysis with era-gated checks for terminology/paradigm shifts, (2) targeted search via `scholarly` + Explore sub-agents, (3) merge + dedup, (4) verify new papers via the seven-step protocol above (including Step 5 Paperpile membership resolution). Convergence: 3 iterations OR <3 genuinely new papers per iteration OR user says "enough". Full protocol: [`references/deep-loop-protocol.md`](references/deep-loop-protocol.md). Agent prompts: [`references/agent-templates.md#phase-45-deep-loop-agent-templates`](references/agent-templates.md#phase-45-deep-loop-agent-templates).
 
 ---
 
@@ -227,7 +229,7 @@ Two outputs required:
 1. `docs/literature-review/literature_summary.bib` — always created, standalone, self-contained.
 2. Project canonical bib (e.g. `paper/references.bib`) — merge into it if it exists.
 
-Rules: Better BibTeX-format keys; reuse Paperpile keys for entries already held; only VERIFIED papers; list ALL authors (never "et al."); seed each entry via `scholarly scholarly-paper-detail`; add `% Confidence: A/B/C` and `% WP criteria:` comments where applicable; every entry needs a connection note in `literature_summary.md`. Full format: [`references/bibliography-format.md`](references/bibliography-format.md).
+Rules: Better BibTeX-format keys; **reuse Paperpile keys for entries the Phase 3 Step 5 membership check found held** (do not regenerate keys for held papers, do not re-stage them as `NEW`); only VERIFIED papers; list ALL authors (never "et al."); seed each entry via `scholarly scholarly-paper-detail`; add `% Confidence: A/B/C`, `% IN PAPERPILE (<key>)` or `% NEW`, and `% WP criteria:` comments where applicable; every entry needs a connection note in `literature_summary.md`. The Paperpile import-staging file must contain **only** entries the Step 5 check tagged `NEW`. Full format: [`references/bibliography-format.md`](references/bibliography-format.md).
 
 Each output gets a [`shared/material-passport.md`](../shared/material-passport.md) header (origin skill, mode, version, produced timestamp) so downstream consumers can detect staleness.
 

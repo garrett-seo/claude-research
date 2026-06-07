@@ -6,12 +6,28 @@ Canonical lookup and filing sequence for all bibliography skills (`/literature`,
 
 When resolving a reference (checking if it exists, finding metadata, verifying DOIs), search in this order:
 
-1. **Paperpile** (primary reference manager) — `paperpile search-library` or `paperpile lookup-by-doi` if DOI is known. If found, reuse its `citekey`.
+1. **Paperpile** (primary reference manager) — check membership **by DOI** (`paperpile lookup-by-doi`); `paperpile search-library` is a metadata-discovery aid, **not** a membership test (see "Membership Check" below). If found, reuse its `citekey`.
 2. **Bibliography MCP** (scholarly sources) — `scholarly scholarly-search` across OpenAlex + Scopus + WoS for metadata enrichment.
 3. **Crossref API** (DOI fallback) — `curl -sL "https://api.crossref.org/works?query.bibliographic=[URL-encoded title+author]&rows=3"` for DOI resolution.
 4. **Web search** (last resort) — `WebSearch` for papers not found in any structured source.
 
 **Graceful degradation:** If the `paperpile` CLI is unavailable, skip it with a warning and continue with external sources.
+
+## Membership Check — Before Tagging Any Reference `NEW`
+
+**Verify Paperpile membership by DOI, never by topic/title search.** `paperpile search-library` is substring matching and is lossy — it misses papers whose stored title/metadata don't match the query terms, which is how citing-works walks, snowball discoveries, and hand-typed foundational papers get wrongly defaulted to `NEW`. A topic-search miss is **not** evidence of absence.
+
+For **every** candidate reference — however it was found (Paperpile search, scholarly search, citing-works/snowball walk, or hand-typed classics) — before it can be tagged `NEW`:
+
+1. **Collect its DOI** (verify the DOI itself first if unsure — a wrong DOI fails the lookup and produces a false `NEW`).
+2. **Check membership by DOI:** `paperpile lookup-by-doi --doi <DOI> --json`. **Batch ≥6 candidates** — dispatch one Bash sub-agent that loops the lookups and returns a merged `{doi: citekey-or-null}` map (per [`_shared/cli-dispatch-policy.md`](../_shared/cli-dispatch-policy.md)), so the main context isn't flooded by per-call banners.
+3. **Match → in Paperpile.** Use the returned citekey and pull the canonical entry with `paperpile export-bib --citekeys <key> --json`. Reconcile per "Key Reconciliation" below — do NOT invent a key or re-type metadata.
+4. **No match → genuinely `NEW`.** Only now stage it for import and generate a BBT-style placeholder key.
+5. **Mark every assembled `.bib` entry** `% IN PAPERPILE (<key>)` or `% NEW — add to Paperpile`, and report the IN-PAPERPILE / NEW split counts.
+
+**Foundational classics are the most common false `NEW`.** Hand-typed canon (Simon, March, Levinthal, Cyert & March, …) is almost always already in the library — check them by DOI too; never assume they're new because you typed them from memory.
+
+A DOI-less candidate can't be DOI-verified: fall back to the author+title `search-library` retry in trap 2 below, and flag it `% NEW (no DOI — membership unconfirmed)` rather than a clean `NEW`.
 
 ## Key Reconciliation (when a reference matches an existing Paperpile item)
 
@@ -50,7 +66,7 @@ Working-paper → published **year drift** (e.g. local SSRN/NBER 2023 vs Paperpi
 1. **Fold diacritics consistently on BOTH sides before comparing surnames.** A local `.bib` LaTeX-escaped name (`Mikl{\'o}s-Thal`) and Paperpile's Unicode form (`Miklós-Thal`) must normalize to the *same* string. Naively stripping `{}\` leaves the base letter (`Mikl'os` → `miklos`) while stripping non-ASCII deletes the accented char entirely (`Miklós` → `mikls`) — the prefixes then diverge and a true top-hit match is silently rejected. Fix: convert LaTeX accent escapes to their base letter AND `unicodedata.normalize('NFKD', s)` + drop combining marks on the Paperpile side, so both collapse to `miklos`. Never compare a LaTeX-stripped string against a non-ASCII-stripped string.
 2. **Query with first-author surname + title keywords, and use a generous limit (≥10).** A title-only query on a topic the library is dense in (e.g. `competition pricing algorithms`) buries the true match below the result cutoff — it never enters the candidate set even though it exists. Always include the first-author surname in the search query; if a DOI is known, prefer `lookup-by-doi` (exact). If a title-only search misses, retry with author added before concluding `NEW`.
 
-References with **no** Paperpile match are `NEW` — stage them for import per the Filing Sequence below; do not invent a Paperpile key.
+References with **no** Paperpile match — confirmed by the DOI Membership Check above, not merely a topic-search miss — are `NEW`; stage them for import per the Filing Sequence below. Do not invent a Paperpile key, and do not tag `NEW` off a `search-library` miss alone.
 
 > Rationale: this is the reconciliation behaviour applied in the 2026-05-30 Werner-2024 bib-parse run — copy keys + backfill DOIs, keep the fuller local metadata. Codified here so `/bib-parse`, `/bib-validate` (fix mode), `/literature` (Phase 4.4), and `/bib-coverage` all behave the same way.
 

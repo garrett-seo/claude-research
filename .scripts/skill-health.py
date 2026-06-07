@@ -31,6 +31,28 @@ PURGE_DAYS = 90
 MAX_TOTAL_SIZE_MB = 50
 
 
+def load_disk_skills() -> set[str]:
+    """Set of on-disk skill names (basename of each SKILL.md's parent dir).
+
+    Used to reconcile logged labels against reality: separate real-skill signal
+    from noise (agents/rules/session-labels/renamed skills logged as if skills)
+    and from blind spots (on-disk skills that have never logged an outcome).
+    Returns an empty set if the skills dir can't be located (callers then skip
+    reconciliation and fall back to the raw, unpartitioned report).
+    """
+    candidates = [Path(__file__).resolve().parent.parent / "skills"]
+    cfg = Path.home() / ".config" / "task-mgmt" / "path"
+    if cfg.exists():
+        try:
+            candidates.append(Path(cfg.read_text().strip()) / "skills")
+        except OSError:
+            pass
+    for skills_dir in candidates:
+        if skills_dir.is_dir():
+            return {p.parent.name for p in skills_dir.glob("**/SKILL.md")}
+    return set()
+
+
 def parse_args():
     p = argparse.ArgumentParser(description="Skill health assessment")
     p.add_argument("--skill", help="Show detail for a single skill")
@@ -42,6 +64,9 @@ def parse_args():
     p.add_argument("--purge", action="store_true", help="Run maintenance (delete old files)")
     p.add_argument("--json", action="store_true", help="Output as JSON")
     p.add_argument("--all-time", action="store_true", help="Use all data, not rolling window")
+    p.add_argument("--alert", action="store_true",
+                   help="Print failing/declining/watch recognized skills, one per line "
+                        "(empty if none). For cron alerting — quiet when all healthy.")
     return p.parse_args()
 
 
@@ -435,6 +460,28 @@ def format_table(report: dict, args) -> str:
     return "\n".join(lines)
 
 
+def format_reconciliation(unrecognized: dict, blind_spots: list[str],
+                          disk_total: int, recognized_count: int) -> str:
+    """Render coverage + blind-spot + unrecognized-label sections below the table."""
+    if disk_total == 0:
+        return ""  # couldn't locate skills dir — skip reconciliation
+    pct = (100 * recognized_count // disk_total) if disk_total else 0
+    lines = ["", "=" * 60,
+             f"Coverage: {recognized_count}/{disk_total} on-disk skills have logged ({pct}%)."]
+
+    lines.append("")
+    lines.append(f"Blind spots — {len(blind_spots)} on-disk skills with NO outcome data "
+                 f"(invisible to health, can't be classified):")
+    lines.append("  " + (", ".join(blind_spots) if blind_spots else "(none)"))
+
+    u = sorted(unrecognized.items(), key=lambda x: -x[1]["total_invocations"])
+    lines.append("")
+    lines.append(f"Unrecognized labels — {len(u)} logged names that are NOT on-disk skills "
+                 f"(agents/rules/session-labels/renamed; excluded from health):")
+    lines.append("  " + (", ".join(f"{k}({v['total_invocations']})" for k, v in u) if u else "(none)"))
+    return "\n".join(lines)
+
+
 def format_detail(skill: str, metrics: dict) -> str:
     """Format detailed view for a single skill."""
     lines = [f"Skill: {skill}", "=" * 40]
@@ -477,39 +524,75 @@ def main():
 
     by_skill = correlate_events(events)
 
-    # Compute metrics
-    report = {}
+    # Compute metrics for every logged label
+    full_report = {}
     for skill_name, data in by_skill.items():
-        report[skill_name] = compute_metrics(data, now)
+        full_report[skill_name] = compute_metrics(data, now)
 
-    # Apply filters
+    # --skill inspects ANY logged label (incl. noise), against the full data
+    if args.skill:
+        if args.skill in full_report:
+            if args.json:
+                print(json.dumps({args.skill: full_report[args.skill]}, indent=2))
+            else:
+                print(format_detail(args.skill, full_report[args.skill]))
+        else:
+            print(f"No data for skill '{args.skill}' in the current window.")
+        return
+
+    # Reconcile logged labels against on-disk skills:
+    #   recognized   = real skills with data  -> the trustworthy health signal
+    #   unrecognized = logged labels not on disk (agents/rules/session-labels/renamed)
+    #   blind_spots  = on-disk skills that never logged (no observability)
+    disk_skills = load_disk_skills()
+    if disk_skills:
+        recognized = {k: v for k, v in full_report.items() if k in disk_skills}
+        unrecognized = {k: v for k, v in full_report.items() if k not in disk_skills}
+        blind_spots = sorted(disk_skills - set(full_report.keys()))
+    else:
+        recognized, unrecognized, blind_spots = full_report, {}, []
+
+    # --alert: one line per actionable recognized skill, nothing if all healthy
+    if args.alert:
+        order = {"failing": 0, "declining": 1, "watch": 2}
+        bad = sorted(
+            ((k, v) for k, v in recognized.items() if v["health"] in order),
+            key=lambda kv: (order[kv[1]["health"]], -kv[1]["error_rate"]),
+        )
+        for k, v in bad:
+            print(f"- {k}: {v['health']} (err {v['error_rate']:.0%}, "
+                  f"{v['error_count']}/{v['classified_invocations']} classified)")
+        return
+
+    # Health table + filters operate on recognized real skills only
+    report = recognized
     if args.health:
         report = {k: v for k, v in report.items() if v["health"] == args.health}
     if args.activity:
         report = {k: v for k, v in report.items() if v["activity"] == args.activity}
 
-    # Output
-    if args.skill:
-        if args.skill in report:
-            if args.json:
-                print(json.dumps({args.skill: report[args.skill]}, indent=2))
-            else:
-                print(format_detail(args.skill, report[args.skill]))
-        else:
-            print(f"No data for skill '{args.skill}' in the current window.")
-        return
-
     if args.json:
         print(json.dumps({
             "skills": report,
+            "unrecognized_labels": {k: v["total_invocations"] for k, v in
+                                    sorted(unrecognized.items(), key=lambda x: -x[1]["total_invocations"])},
+            "blind_spots": blind_spots,
             "meta": {
                 "event_count": len(events),
                 "window_days": ROLLING_WINDOW_DAYS if not args.all_time else "all",
                 "generated_at": now.isoformat(),
+                "disk_skill_count": len(disk_skills),
+                "recognized_count": len(recognized),
+                "unrecognized_count": len(unrecognized),
+                "blind_spot_count": len(blind_spots),
             }
         }, indent=2))
     else:
         print(format_table(report, args))
+        # Only show reconciliation on the unfiltered full view
+        if not (args.health or args.activity or args.top):
+            print(format_reconciliation(unrecognized, blind_spots,
+                                        len(disk_skills), len(recognized)))
 
 
 if __name__ == "__main__":

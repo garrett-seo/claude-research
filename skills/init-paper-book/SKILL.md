@@ -127,6 +127,7 @@ Phase 2: Scaffold vault           (mkdir, copy bib + figures)
 Phase 3: Draft chapters           (mixed — sub-agents for content-heavy chapters)
 Phase 4: Verify chapters          (read-only sub-agent; HARD GATES Phase 5)
 Phase 5: Register + smoke-test    (registry entry, atlas reload, smoke probe)
+Phase 6: Build PDF companion      (mystmd → patched xelatex; soft-fail)
 ```
 
 ### Phase 1: Read + plan
@@ -150,6 +151,10 @@ See [`references/phase-4-verify-chapters.md`](references/phase-4-verify-chapters
 ### Phase 5: Register + smoke-test
 
 See [`references/phase-5-register.md`](references/phase-5-register.md) for registry append, atlas reload, HTTP smoke test, and Playwright visual check.
+
+### Phase 6: Build PDF companion (soft-fail)
+
+See [`references/phase-6-pdf-build.md`](references/phase-6-pdf-build.md). Runs `bash scripts/build-book-pdf.sh <slug>` to produce `~/Research-Vault/books/<slug>/exports/<slug>.pdf` via a `myst build --tex` → patch → `latexmk -xelatex` pipeline. Skips silently if `mystmd` is not on PATH; warns on build error but does not block — atlas HTML rendering remains the canonical surface.
 
 ## Anti-patterns
 

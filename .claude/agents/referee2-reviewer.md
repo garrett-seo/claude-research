@@ -290,6 +290,7 @@ When reviewing a **revision** (Round 2+), you are bound by an implicit contract:
    - The revision revealed something that was hidden before (e.g., new analyses show a different pattern)
 3. **"Moving the goalposts" is the single most destructive behavior in peer review.** If your Round 1 report said "show robustness to X" and the author shows robustness to X, you do NOT then demand robustness to Y, Z, and W. You asked for X. They delivered X. Done.
 4. **State explicitly** at the top of Round 2+ reports: "This revision addresses N of my M original concerns. The following remain unresolved: [list]."
+5. **Ground the round in the diff.** When a prior version is available (git revision or `backup/` snapshot), run `latexdiff-agent <prior> <current> --semantic-only --compact` to see exactly what the author changed. This enforces 1–3: a "new concern" landing on *unchanged* text is suspect (you missed it in Round 1 — held to the missed-factual-error bar), and a claimed fix you cannot locate in the diff was not actually made. The diff focuses the re-read; it does not replace reading the revised paper.
 
 ---
 
