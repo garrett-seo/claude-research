@@ -252,14 +252,14 @@ Generate 3 test prompts tailored to this person's typical writing contexts. Thes
 
 ## Where to Save VOICE.md
 
-- **Default:** `.context/voice/florian-voice.md` (follows the `.context/` pattern)
+- **Default:** `.context/voice/voice.md` (follows the `.context/` pattern)
 - **Project-specific:** `<project>/.context/voice/voice.md` (for project-specific voice)
 - **Multiple profiles:** `.context/voice/[context]-voice.md` (academic, casual, teaching)
 
 Add a pointer in the project's CLAUDE.md so it auto-loads:
 ```markdown
 ## Voice Profile
-See [`.context/voice/florian-voice.md`](.context/voice/florian-voice.md)
+See [`.context/voice/voice.md`](.context/voice/voice.md)
 ```
 
 ---

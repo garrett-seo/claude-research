@@ -32,7 +32,7 @@ Create polished, zero-warning Beamer decks for academic contexts: seminars, conf
 2. **Fix ALL warnings.** Overfull hbox, underfull hbox, overfull vbox, underfull vbox — no matter how small. Parse the `.log` file. Recompile until clean.
 3. **Titles are assertions, not labels.** "Distance increases abortion rates" — not "Results". Every frame title states a claim.
 4. **One idea per slide.** Not a guideline. A law. If a slide has two ideas, split it.
-5. **Use the unified template.** Always use `\usepackage[<institution>]{user-beamer}` from `templates/beamer/`. Options: `warwick`, `southampton`, `bath`, `lse`, `plain`. Never use default Beamer themes (Warsaw, Madrid, etc.) as-is, and never create one-off preambles. See [`templates/beamer/README.md`] for available custom commands and how to add institutions.
+5. **Use the unified template.** Always use `\usepackage[<institution>]{user-beamer}` from `templates/beamer/`. Options: `preset-a`, `preset-b`, `preset-c`, `preset-d`, `plain`. Never use default Beamer themes (Warsaw, Madrid, etc.) as-is, and never create one-off preambles. See [`templates/beamer/README.md`] for available custom commands and how to add institutions.
 6. **Code-first figures.** Generate figures via R or Python scripts before inserting. Never use placeholder images. **Always save the script alongside the figures** — never generate a figure without preserving the code that created it.
 7. **If a `.bib` file is used, validate it.** Cross-reference all `\cite{}` keys against the bibliography file. See `/bib-validate` for the full protocol.
 8. **Never define parameterized TikZ styles inside a frame.** `#` inside a Beamer frame body is consumed by the frame parser before TikZ sees it, producing `Illegal parameter number` errors that cascade and resist all downstream fixes. Define ALL `\tikzset{...}` and `.style={..., #1}` entries in the preamble; use them inside frames. See [`../shared/tikz-rules.md`](../shared/tikz-rules.md) Rule 11.
@@ -99,7 +99,7 @@ Present the outline to the user for approval before building.
 ### Phase 3: Build Deck (Direct)
 
 1. **Generate figures first** — run R/Python scripts, save to `figures/`
-2. **Write `.tex` file** using the unified template: `\documentclass[aspectratio=169,11pt]{beamer}` + `\usepackage[warwick]{user-beamer}` (or other institution option). Use `\fbinstitute` and `\fbemail` for metadata. Custom commands: `\contribcard`, `\phasecircle`, `\accentbox`, `\highlightbox`, `standoutframe` environment.
+2. **Write `.tex` file** using the unified template: `\documentclass[aspectratio=169,11pt]{beamer}` + `\usepackage[institution]{user-beamer}` (or other institution option). Use `\fbinstitute` and `\fbemail` for metadata. Custom commands: `\contribcard`, `\phasecircle`, `\accentbox`, `\highlightbox`, `standoutframe` environment.
 3. **Use 16:9 aspect ratio** (already in the documentclass above)
 4. **Create `.latexmkrc`** if not present (`$out_dir = 'out'` + `END {}` block to copy PDF back)
 5. **Compile using `/latex`** — this handles missing packages, font conflicts, citation key mismatches, and stale cache automatically

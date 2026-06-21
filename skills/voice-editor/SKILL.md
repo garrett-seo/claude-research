@@ -23,7 +23,7 @@ Transform generic or auto-generated content into voice-matched writing using a V
 
 Provide:
 1. **Content to edit** (paste or file path)
-2. **VOICE.md location** (default: `.context/voice/florian-voice.md` or project's `.context/voice/voice.md`)
+2. **VOICE.md location** (default: `.context/voice/voice.md` or project's `.context/voice/voice.md`)
 
 The skill will:
 1. Run slop detection on the content
