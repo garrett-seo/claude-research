@@ -79,8 +79,6 @@ git merge upstream/main   # or: git rebase upstream/main
 git push origin main
 ```
 
-> **Note:** `hooks/pdf-to-markdown.py` isn't currently wired into any hook event in `.claude/settings.json` — register it under the relevant `PreToolUse` matcher if you want it active.
-
 ### Related Packages
 
 | Package | Install | Description |
