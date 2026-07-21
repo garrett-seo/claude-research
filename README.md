@@ -61,6 +61,10 @@ On a new machine:
 git clone https://github.com/garrett-seo/claude-research.git
 cd claude-research
 git remote add upstream https://github.com/flonat/claude-research.git
+
+# setup.sh only warns if uv is missing, so install it first if needed
+command -v uv || curl -LsSf https://astral.sh/uv/install.sh | sh
+
 ./scripts/setup.sh
 ```
 
@@ -70,6 +74,8 @@ Then recreate the local-only Python venv used by `hooks/pdf-to-markdown.py` (not
 uv venv hooks/venv
 uv pip install -r hooks/requirements.txt --python hooks/venv/bin/python
 ```
+
+Sanity-check the hook is wired up: open any `.pdf` with Claude Code's `Read` tool — you should see "Converting PDF to markdown..." appear.
 
 To pull future updates from the template later:
 
