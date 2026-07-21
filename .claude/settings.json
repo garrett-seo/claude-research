@@ -91,7 +91,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "$HOME/.claude/hooks/venv/bin/python $HOME/.claude/hooks/pdf-to-markdown.py"
+            "command": "$HOME/.claude/hooks/venv/bin/python3 $HOME/.claude/hooks/pdf-to-markdown.py",
+            "statusMessage": "Converting PDF to markdown..."
           }
         ]
       }
