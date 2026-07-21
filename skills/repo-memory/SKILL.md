@@ -1,6 +1,6 @@
 ---
 name: repo-memory
-description: "Use when you need to load or maintain a persistent memory.md file inside a specific repo to track ongoing work, decisions, and open questions across sessions."
+description: "Use when you need to load or maintain a persistent project-memory.md file inside a specific repo to track ongoing work, decisions, and open questions across sessions."
 argument-hint: "[repo-path]"
 ---
 
@@ -20,7 +20,7 @@ The user may pass a repo path as `$ARGUMENTS`. If empty, use the current working
 
 ## Step 2 — Load or create memory
 
-Check for `{repo_path}/memory.md`:
+Check for `{repo_path}/project-memory.md`:
 
 - **If it exists**: Read the file. Briefly summarize its contents to the user in 2–3 sentences so they know what context has been loaded.
 - **If it doesn't exist**: Create it using the template below, then tell the user you've initialized a fresh memory file.
@@ -54,7 +54,7 @@ Answer the user's questions and help with tasks as usual. Do not change behavior
 
 ## Step 4 — Update memory after each meaningful exchange
 
-After every exchange where something notable is learned or decided, silently update `{repo_path}/memory.md` using the Write or Edit tool. Do **not** announce the update unless the user asks. Use judgment — not every message warrants an update.
+After every exchange where something notable is learned or decided, silently update `{repo_path}/project-memory.md` using the Write or Edit tool. Do **not** announce the update unless the user asks. Use judgment — not every message warrants an update.
 
 ### What to capture
 

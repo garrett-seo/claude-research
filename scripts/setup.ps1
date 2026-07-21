@@ -86,15 +86,19 @@ Link-Component "agents" (Join-Path $RepoDir ".claude\agents") (Join-Path $Claude
 Link-Component "rules"  (Join-Path $RepoDir ".claude\rules")  (Join-Path $ClaudeDir "rules")
 Link-Component "hooks"  (Join-Path $RepoDir "hooks")  (Join-Path $ClaudeDir "hooks")
 
-# ---------- 3. Copy settings (skip in update mode) ----------
+# ---------- 3. Copy or merge settings ----------
 $SettingsSrc = Join-Path $RepoDir ".claude\settings.json"
 $SettingsDst = Join-Path $ClaudeDir "settings.json"
+$MergeScript = Join-Path $RepoDir "scripts\merge-settings.py"
 
-if ($Update) {
-    Write-Info "Update mode -- skipping settings.json (preserving your config)"
-} elseif (Test-Path $SettingsDst) {
-    Write-Warn "~/.claude/settings.json already exists -- not overwriting"
-    Write-Warn "Compare with $SettingsSrc and merge manually"
+if (Test-Path $SettingsDst) {
+    $pythonCmd = Get-Command python -ErrorAction SilentlyContinue
+    if ($pythonCmd) {
+        & python $MergeScript $SettingsSrc $SettingsDst
+    } else {
+        Write-Warn "~/.claude/settings.json already exists and python is unavailable to merge automatically"
+        Write-Warn "Compare with $SettingsSrc and merge manually"
+    }
 } else {
     Copy-Item $SettingsSrc $SettingsDst
     Write-Ok "Copied settings.json -> $SettingsDst"
@@ -171,7 +175,8 @@ if (-not $Update) {
     Write-Host ""
     Write-Host "Then open any project directory and run 'claude' to start!"
 } else {
-    Write-Host "Links updated. Your settings.json was preserved."
+    Write-Host "Links updated. New hooks (if any) were merged into settings.json;"
+    Write-Host "your existing permissions and other settings were preserved."
     Write-Host ""
     Write-Host "Check docs\getting-started.md if you need to merge new settings."
 }

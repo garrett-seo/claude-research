@@ -76,12 +76,14 @@ link_component "agents" "$REPO_DIR/.claude/agents" "$CLAUDE_DIR/agents"
 link_component "rules"  "$REPO_DIR/.claude/rules"  "$CLAUDE_DIR/rules"
 link_component "hooks"  "$REPO_DIR/hooks"  "$CLAUDE_DIR/hooks"
 
-# ---------- 3. Copy settings (skip in update mode) ----------
-if $UPDATE_MODE; then
-  info "Update mode — skipping settings.json (preserving your config)"
-elif [[ -f "$CLAUDE_DIR/settings.json" ]]; then
-  warn "~/.claude/settings.json already exists — not overwriting"
-  warn "Compare with $REPO_DIR/.claude/settings.json and merge manually"
+# ---------- 3. Copy or merge settings ----------
+if [[ -f "$CLAUDE_DIR/settings.json" ]]; then
+  if command -v python3 &>/dev/null; then
+    python3 "$REPO_DIR/scripts/merge-settings.py" "$REPO_DIR/.claude/settings.json" "$CLAUDE_DIR/settings.json"
+  else
+    warn "~/.claude/settings.json already exists and python3 is unavailable to merge automatically"
+    warn "Compare with $REPO_DIR/.claude/settings.json and merge manually"
+  fi
 else
   cp "$REPO_DIR/.claude/settings.json" "$CLAUDE_DIR/settings.json"
   ok "Copied settings.json → $CLAUDE_DIR/settings.json"
@@ -137,7 +139,8 @@ if ! $UPDATE_MODE; then
   echo ""
   echo "Then open any project directory and run 'claude' to start!"
 else
-  echo "Symlinks updated. Your settings.json was preserved."
+  echo "Symlinks updated. New hooks (if any) were merged into settings.json;"
+  echo "your existing permissions and other settings were preserved."
   echo ""
   echo "Check docs/getting-started.md if you need to merge new settings."
 fi

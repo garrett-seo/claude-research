@@ -45,6 +45,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/startup-context-loader.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/repo-memory-loader.sh"
           }
         ]
       },
@@ -54,6 +58,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/resume-context-loader.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/repo-memory-loader.sh"
           }
         ]
       },
@@ -104,6 +112,10 @@
           {
             "type": "command",
             "command": "$HOME/.claude/hooks/promise-checker.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/repo-memory-updater.sh"
           }
         ]
       }
