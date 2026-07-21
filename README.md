@@ -51,6 +51,36 @@ git pull; .\scripts\setup.ps1 -Update
 
 Then customise `.context/profile.md`, `.context/current-focus.md`, and `CLAUDE.md` with your details. See [`docs/getting-started.md`](docs/getting-started.md) for the full guide (includes Windows-specific setup, Python install, and troubleshooting).
 
+### Your Fork on a New Machine
+
+This repo is set up with two remotes: `origin` → your fork (`https://github.com/garrett-seo/claude-research.git`), and `upstream` → the original template (`https://github.com/flonat/claude-research.git`), so you can keep pulling template updates without losing your customisations.
+
+On a new machine:
+
+```bash
+git clone https://github.com/garrett-seo/claude-research.git
+cd claude-research
+git remote add upstream https://github.com/flonat/claude-research.git
+./scripts/setup.sh
+```
+
+Then recreate the local-only Python venv used by `hooks/pdf-to-markdown.py` (not tracked in git — venvs aren't portable across machines):
+
+```bash
+uv venv hooks/venv
+uv pip install -r hooks/requirements.txt --python hooks/venv/bin/python
+```
+
+To pull future updates from the template later:
+
+```bash
+git fetch upstream
+git merge upstream/main   # or: git rebase upstream/main
+git push origin main
+```
+
+> **Note:** `hooks/pdf-to-markdown.py` isn't currently wired into any hook event in `.claude/settings.json` — register it under the relevant `PreToolUse` matcher if you want it active.
+
 ### Related Packages
 
 | Package | Install | Description |
