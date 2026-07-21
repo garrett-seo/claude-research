@@ -85,6 +85,15 @@
             "command": "$HOME/.claude/hooks/block-destructive-git.sh"
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/venv/bin/python $HOME/.claude/hooks/pdf-to-markdown.py"
+          }
+        ]
       }
     ],
     "Stop": [
