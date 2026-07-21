@@ -1,0 +1,6 @@
+# Python dependencies for hooks/pdf-to-markdown.py
+PyMuPDF
+pymupdf4llm
+pymupdf-layout
+PyYAML
+tabulate
