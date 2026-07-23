@@ -18,6 +18,10 @@ The user may pass a repo path as `$ARGUMENTS`. If empty, use the current working
 - Otherwise use the current working directory.
 - Confirm the directory exists before proceeding.
 
+## Step 1.5 — Record the session marker
+
+Write the resolved repo path to `~/.claude/state/repo-memory-sessions/$CLAUDE_CODE_SESSION_ID` (create the directory if needed; one line, just the absolute repo path, no trailing content). This lets the `SessionStart` and `Stop` hooks (`repo-memory-loader.sh`, `repo-memory-updater.sh`) find the right `project-memory.md` directly for the rest of this session — including on a later `resume`/`compact` — instead of inferring it from cwd or edited-file paths, both of which are unreliable when the session didn't launch from inside this repo. Do this silently; don't announce it.
+
 ## Step 2 — Load or create memory
 
 Check for `{repo_path}/project-memory.md`:
@@ -81,4 +85,4 @@ After every exchange where something notable is learned or decided, silently upd
 
 ## Step 5 — On explicit `/repo-memory` re-invocation
 
-If the user calls this skill again mid-session (possibly with a different path), re-read the memory file at the new path and reload context. Continue updating as in Step 4.
+If the user calls this skill again mid-session (possibly with a different path), re-read the memory file at the new path, overwrite the session marker from Step 1.5 with the new path, and reload context. Continue updating as in Step 4.

@@ -6,13 +6,16 @@
 # skills/repo-memory). Mirrors the block-on-missing-action pattern used by
 # promise-checker.sh.
 #
-# Project root is derived from the actually-edited files' paths (walking up
-# each one looking for a project-memory.md), NOT from this subprocess's own
-# cwd/$CLAUDE_PROJECT_DIR -- those are fixed at session launch and do not
-# track a later `cd` into a project subdirectory, which made this hook a
-# silent no-op for any session that starts outside the project it ends up
-# working in. A cwd-based check is kept as a last-resort fallback in case a
-# future harness does pass a correct, live cwd.
+# Project root resolution, in priority order:
+#   1. Session marker at ~/.claude/state/repo-memory-sessions/$session_id,
+#      written by the /repo-memory skill when it's explicitly invoked. This
+#      is the reliable path -- explicit, not inferred.
+#   2. Walk up from an actually-edited file's path looking for the nearest
+#      project-memory.md. Works even without a marker, but only covers turns
+#      that touched a file inside the tracked repo.
+#   3. This subprocess's own cwd/$CLAUDE_PROJECT_DIR, as a last resort. Both
+#      are fixed at session launch and do NOT track a later `cd` into a
+#      project subdirectory -- unreliable, kept only as a final fallback.
 
 INPUT=$(cat)
 
@@ -20,6 +23,22 @@ INPUT=$(cat)
 STOP_ACTIVE=$(echo "$INPUT" | jq -r '.stop_hook_active // false')
 if [ "$STOP_ACTIVE" = "true" ]; then
   exit 0
+fi
+
+# --- Priority 1: explicit session marker ---
+SESSION_ID=$(echo "$INPUT" | jq -r '.session_id // empty')
+[ -z "$SESSION_ID" ] && SESSION_ID="${CLAUDE_CODE_SESSION_ID:-}"
+MARKER_FILE=""
+if [ -n "$SESSION_ID" ]; then
+  MARKER_FILE="$HOME/.claude/state/repo-memory-sessions/$SESSION_ID"
+fi
+MARKER_ROOT=""
+if [ -n "$MARKER_FILE" ] && [ -f "$MARKER_FILE" ]; then
+  MARKER_ROOT=$(cat "$MARKER_FILE" 2>/dev/null)
+  # Marker is only trustworthy if it still actually has a project-memory.md
+  if [ -z "$MARKER_ROOT" ] || [ ! -f "$MARKER_ROOT/project-memory.md" ]; then
+    MARKER_ROOT=""
+  fi
 fi
 
 TRANSCRIPT_PATH=$(echo "$INPUT" | jq -r '.transcript_path // empty')
@@ -64,17 +83,21 @@ _find_project_memory_root() {
   return 1
 }
 
-PROJECT_ROOT=""
-while IFS= read -r f; do
-  [ -z "$f" ] && continue
-  candidate=$(_find_project_memory_root "$(dirname "$f")")
-  if [ -n "$candidate" ]; then
-    PROJECT_ROOT="$candidate"
-    break
-  fi
-done <<< "$EDITED_FILES"
+PROJECT_ROOT="$MARKER_ROOT"
 
-# Fallback: last resort, in case a future harness passes a live, correct cwd.
+# Priority 2: walk up from an actually-edited file's path.
+if [ -z "$PROJECT_ROOT" ]; then
+  while IFS= read -r f; do
+    [ -z "$f" ] && continue
+    candidate=$(_find_project_memory_root "$(dirname "$f")")
+    if [ -n "$candidate" ]; then
+      PROJECT_ROOT="$candidate"
+      break
+    fi
+  done <<< "$EDITED_FILES"
+fi
+
+# Priority 3: last resort, in case a future harness passes a live, correct cwd.
 if [ -z "$PROJECT_ROOT" ]; then
   FALLBACK_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd)
   if [ -f "$FALLBACK_ROOT/project-memory.md" ]; then
