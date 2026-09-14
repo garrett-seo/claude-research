@@ -142,6 +142,21 @@
           }
         ]
       }
+    ],
+    "UserPromptSubmit": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/stepwise-mode.sh"
+          },
+          {
+            "type": "command",
+            "command": "$HOME/.claude/hooks/teach-mode.sh"
+          }
+        ]
+      }
     ]
   }
 }

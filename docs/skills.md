@@ -1,6 +1,6 @@
 # Skills
 
-> 50 reusable workflow definitions available across all projects.
+> 53 reusable workflow definitions available across all projects.
 
 Skills are structured instruction sets (`SKILL.md` files) that turn Claude into a specialised tool for specific tasks — from compiling LaTeX to bootstrapping research projects.
 
@@ -49,10 +49,12 @@ Skills are structured instruction sets (`SKILL.md` files) that turn Claude into 
 | `skill-extract` | Extract reusable knowledge from the current session into a persistent skill.\nUse when you discover something non-obvious, create a workaround, or develop\na multi-step workflow that future sessions would benefit from |
 | `skill-preflight` | Use when you need a pre-flight duplicate check before creating new skills or agents |
 | `split-pdf` | Use when you need to download, split, and deeply read an academic PDF that is NOT in Paperpile (for Paperpile items, prefer paperpile get-pdf-text directly) |
+| `stepwise` | Toggle stepwise mode on or off — explanations and code edits broken into small confirmed steps instead of everything done at once. Hook-enforced, session-scoped |
 | `strategic-revision` | Use when you receive referee comments for a paper (R&R, revise-and-resubmit) and need a DAG-validated revision master plan — atomic task extraction, dependency mapping, computational critical-path analysis, execution blocks, venue strategy. Merges /parse-reviews ingestion with Sihvonen's strategic-revision architecture |
 | `synthetic-data` | Use when you need to generate structurally realistic synthetic datasets for pilot testing or power analysis |
 | `system-audit` | Use when you need to run parallel audits across skills, hooks, agents, rules, and conventions |
 | `task-management` | Use when you need help with daily planning, weekly reviews, meeting actions, or vault task queries |
+| `teach` | Toggle teach mode on or off — plain-language explanations that lead with the problem a concept was built to solve, then a worked toy example. Hook-enforced, session-scoped |
 | `update-focus` | Use when you need to update current-focus.md with a structured session summary |
 | `update-project-doc` | Use when you need to update a project's own CLAUDE.md, README.md, or docs/ to reflect current state |
 | `voice-analyzer` | Use when you need to analyze writing samples to create a portable voice profile. Analyze writing samples to create a portable voice profile and style guide. Use when setting up voice-matched AI writing, onboarding to a new project, or refreshing an outdated style guide |

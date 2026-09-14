@@ -120,7 +120,7 @@ Detailed instructions in `.context/workflows/`:
 <!-- COMPONENTS:START -->
 ## Skills Available
 
-50 skills in `skills/` folder. See [`docs/components/skills.md`](docs/components/skills.md) for the full catalogue.
+53 skills in `skills/` folder. See [`docs/components/skills.md`](docs/components/skills.md) for the full catalogue.
 
 ## Agents
 
@@ -155,7 +155,7 @@ In `.claude/rules/` — these apply automatically to every session. See [`docs/c
 
 ## Hooks
 
-9 hook scripts in `hooks/`. See [`docs/components/hooks.md`](docs/components/hooks.md) for the full table.
+14 hook scripts in `hooks/`. See [`docs/components/hooks.md`](docs/components/hooks.md) for the full table.
 <!-- COMPONENTS:END -->
 
 ## After Every Session
@@ -184,7 +184,7 @@ Update `.context/current-focus.md` (what we worked on, where left off, what's ne
 | `.claude/agents/` | Agent definitions (15 agents) |
 | `.claude/rules/` | Auto-loaded rules (18 rules) |
 | `skills/` | 50 skill definitions |
-| `hooks/` | 9 hook scripts |
+| `hooks/` | 14 hook scripts |
 | `.scripts/` | CLI tools for Notion task management |
 | `packages/cli-council/` | cli-council |
 | `packages/council-api/` | Multi-model council via OpenRouter API |
