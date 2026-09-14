@@ -120,15 +120,15 @@ Detailed instructions in `.context/workflows/`:
 <!-- COMPONENTS:START -->
 ## Skills Available
 
-53 skills in `skills/` folder. See [`docs/components/skills.md`](docs/components/skills.md) for the full catalogue.
+53 skills in `skills/` folder. See [`docs/skills.md`](docs/skills.md) for the full catalogue.
 
 ## Agents
 
-15 agents in `.claude/agents/`. See [`docs/components/agents.md`](docs/components/agents.md) for when to use each.
+15 agents in `.claude/agents/`. See [`docs/agents.md`](docs/agents.md) for when to use each.
 
 ## Rules (18 Auto-Loaded)
 
-In `.claude/rules/` — these apply automatically to every session. See [`docs/components/rules.md`](docs/components/rules.md) for documentation.
+In `.claude/rules/` — these apply automatically to every session. See [`docs/rules.md`](docs/rules.md) for documentation.
 
 <!-- RULES-TABLE:START -->
 | Rule | Purpose |
@@ -155,7 +155,7 @@ In `.claude/rules/` — these apply automatically to every session. See [`docs/c
 
 ## Hooks
 
-14 hook scripts in `hooks/`. See [`docs/components/hooks.md`](docs/components/hooks.md) for the full table.
+14 hook scripts in `hooks/`. See [`docs/hooks.md`](docs/hooks.md) for the full table.
 <!-- COMPONENTS:END -->
 
 ## After Every Session

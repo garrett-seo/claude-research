@@ -43,7 +43,7 @@ When **auditing** a project's documentation (via `/sync-repo scout`, `/update-pr
 
 1. Grep for `Governed by: skills/shared/project-documentation.md` across all `.md` and `.tex` files
 2. Flag any outward-facing docs that lack the tag — these are candidates for tagging
-3. Do not tag internal docs (CLAUDE.md, SKILL.md, `.context/` files, `log/` files, `docs/components/skills.md`, etc.) — those are governed by `system-documentation.md`
+3. Do not tag internal docs (CLAUDE.md, SKILL.md, `.context/` files, `log/` files, `docs/skills.md`, etc.) — those are governed by `system-documentation.md`
 
 ---
 

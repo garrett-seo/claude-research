@@ -211,7 +211,7 @@ The validator checks: frontmatter validity, name format and directory match, des
    ```
 2. Check that `~/.claude/skills/{name}/SKILL.md` exists
 3. Tell the user: "Created `/{name}` — [one-line summary]. It's available immediately in all projects."
-4. If the skill is substantial, suggest updating `docs/components/skills.md` with the new entry
+4. If the skill is substantial, suggest updating `docs/skills.md` with the new entry
 
 ## What This Skill Does NOT Do
 
